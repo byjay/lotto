@@ -1804,7 +1804,7 @@
                 addLog(`🎲 빠른 추첨 결과: ${numbers.join(', ')}`);
             }
 
-            // 스마트 추첨 (AI 기반)
+            // 스마트 추첨 (AI 기반 - 2단계 생성 로직)
             function smartLottery() {
                 addLog('🧠 AI 스마트 추첨 분석 중...');
 
@@ -1820,27 +1820,55 @@
                     }
                 }
 
-                const numbers = [];
-
-                // 2. 가중치 기반 랜덤 선택
-                while (numbers.length < 6) {
+                // 2. 1차 후보군 선정 (15개)
+                const candidates = [];
+                while (candidates.length < 15) {
                     const idx = Math.floor(Math.random() * weightedPool.length);
                     const num = weightedPool[idx];
-                    if (!numbers.includes(num)) {
-                        numbers.push(num);
+                    if (!candidates.includes(num)) {
+                        candidates.push(num);
                     }
                 }
+                candidates.sort((a, b) => a - b);
+                addLog(`📋 1차 후보군(15개) 선정 완료: ${candidates.join(', ')}`);
 
-                numbers.sort((a, b) => a - b);
+                // 후보군 표시 (UI 업데이트)
+                const candidateContainer = document.getElementById('lotteryNumbers');
+                candidateContainer.innerHTML = '<div class="w-full text-center mb-2 text-sm text-gray-400">1차 후보군 (15개)</div><div class="flex flex-wrap justify-center gap-1 mb-4 border-b border-gray-700 pb-4 w-full"></div>';
+                const candidateWrapper = candidateContainer.querySelector('div:nth-child(2)');
 
-                const container = document.getElementById('lotteryNumbers');
-                container.innerHTML = '';
-                numbers.forEach(num => {
-                    container.appendChild(createLottoBall(num));
+                candidates.forEach(num => {
+                    const ball = createLottoBall(num);
+                    ball.classList.add('scale-75'); // 후보군은 조금 작게 표시
+                    candidateWrapper.appendChild(ball);
                 });
 
+                // 3. 최종 6개 선택 (후보군 내에서 랜덤)
+                const finalNumbers = [];
+                const tempCandidates = [...candidates]; // 복사본 생성
+
+                while (finalNumbers.length < 6) {
+                    const idx = Math.floor(Math.random() * tempCandidates.length);
+                    finalNumbers.push(tempCandidates[idx]);
+                    tempCandidates.splice(idx, 1); // 선택된 번호 제거
+                }
+                finalNumbers.sort((a, b) => a - b);
+
+                // 최종 결과 표시
+                const finalWrapper = document.createElement('div');
+                finalWrapper.className = 'w-full text-center mb-2 text-sm text-yellow-400 font-bold';
+                finalWrapper.textContent = '✨ 최종 추천 번호 ✨';
+                candidateContainer.appendChild(finalWrapper);
+
+                const finalBallsDiv = document.createElement('div');
+                finalBallsDiv.className = 'flex justify-center space-x-2';
+                finalNumbers.forEach(num => {
+                    finalBallsDiv.appendChild(createLottoBall(num));
+                });
+                candidateContainer.appendChild(finalBallsDiv);
+
                 document.getElementById('lotteryResult').style.display = 'block';
-                addLog(`🧠 AI 스마트 추첨 결과: ${numbers.join(', ')}`);
+                addLog(`🧠 AI 최종 추천 결과: ${finalNumbers.join(', ')}`);
             }
 
             // 럭키 추첨
